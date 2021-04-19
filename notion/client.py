@@ -37,7 +37,8 @@ def create_session():
         backoff_factor=0.3,
         status_forcelist=(502, 503, 504),
         # CAUTION: adding 'POST' to this list which is not technically idempotent
-        method_whitelist=("POST", "HEAD", "TRACE", "GET", "PUT", "OPTIONS", "DELETE"),
+        method_whitelist=("POST", "HEAD", "TRACE", "GET",
+                          "PUT", "OPTIONS", "DELETE"),
     )
     adapter = HTTPAdapter(max_retries=retry)
     session.mount("https://", adapter)
@@ -62,7 +63,8 @@ class NotionClient(object):
         self.session = create_session()
         self.session.cookies = cookiejar_from_dict({"token_v2": token_v2})
         if enable_caching:
-            cache_key = cache_key or hashlib.sha256(token_v2.encode()).hexdigest()
+            cache_key = cache_key or hashlib.sha256(
+                token_v2.encode()).hexdigest()
             self._store = RecordStore(self, cache_key=cache_key)
         else:
             self._store = RecordStore(self)
@@ -81,7 +83,8 @@ class NotionClient(object):
     def _update_user_info(self):
         records = self.post("loadUserContent", {}).json()["recordMap"]
         self._store.store_recordmap(records)
-        self.current_user = self.get_user(list(records["notion_user"].keys())[0])
+        self.current_user = self.get_user(
+            list(records["notion_user"].keys())[0])
         self.current_space = self.get_space(list(records["space"].keys())[0])
         return records
 
@@ -100,7 +103,8 @@ class NotionClient(object):
         email_uid_dict = self.get_email_uid()
         uid = email_uid_dict.get(email)
         if not uid:
-            raise Exception(f"Not Found {email}, Available IDs: {list(email_uid_dict)}")
+            raise Exception(
+                f"Not Found {email}, Available IDs: {list(email_uid_dict)}")
         self.set_user_by_uid(uid)
 
     def get_top_level_pages(self):
@@ -115,7 +119,8 @@ class NotionClient(object):
         Retrieve an instance of a subclass of Block that maps to the block/page identified by the URL or ID passed in.
         """
         block_id = extract_id(url_or_id)
-        block = self.get_record_data("block", block_id, force_refresh=force_refresh)
+        block = self.get_record_data(
+            "block", block_id, force_refresh=force_refresh)
         if not block:
             return None
         if block.get("parent_table") == "collection":
@@ -140,14 +145,16 @@ class NotionClient(object):
         """
         Retrieve an instance of User that maps to the notion_user identified by the ID passed in.
         """
-        user = self.get_record_data("notion_user", user_id, force_refresh=force_refresh)
+        user = self.get_record_data(
+            "notion_user", user_id, force_refresh=force_refresh)
         return User(self, user_id) if user else None
 
     def get_space(self, space_id, force_refresh=False):
         """
         Retrieve an instance of Space that maps to the space identified by the ID passed in.
         """
-        space = self.get_record_data("space", space_id, force_refresh=force_refresh)
+        space = self.get_record_data(
+            "space", space_id, force_refresh=force_refresh)
         return Space(self, space_id) if space else None
 
     def get_collection_view(self, url_or_id, collection=None, force_refresh=False):
@@ -191,7 +198,8 @@ class NotionClient(object):
         self._store.call_get_record_values(**kwargs)
 
     def refresh_collection_rows(self, collection_id):
-        row_ids = [row.id for row in self.get_collection(collection_id).get_rows()]
+        row_ids = [row.id for row in self.get_collection(
+            collection_id).get_rows()]
         self._store.set_collection_rows(collection_id, row_ids)
 
     def post(self, endpoint, data):
@@ -259,7 +267,7 @@ class NotionClient(object):
         data = {
             "query": search,
             "parentId": parent_id,
-            "limit": 10000,
+            "limit": 100,
             "spaceId": self.current_space.id,
         }
         response = self.post("searchPagesWithParent", data).json()

@@ -19,7 +19,7 @@ install_requires = get_requirements("requirements.txt")
 
 setuptools.setup(
     name="notion",
-    version="0.0.30",
+    version="0.0.31",
     author="Jamie Alexandre",
     author_email="jamalex+python@gmail.com",
     description="Unofficial Python API client for Notion.so",

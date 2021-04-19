@@ -43,7 +43,8 @@ class Callback(object):
             difference, old_val, new_val
         )
 
-        logger.debug("Firing callback {} with kwargs: {}".format(self.callback, kwargs))
+        logger.debug("Firing callback {} with kwargs: {}".format(
+            self.callback, kwargs))
 
         # trim down the parameters we'll be passing, to include only those the callback will accept
         params = signature(self.callback).parameters
@@ -56,7 +57,8 @@ class Callback(object):
         # perform the callback, gracefully handling any exceptions
         try:
             # trigger the callback within its own thread, so it won't block others if it's long-running
-            threading.Thread(target=self.callback, kwargs=kwargs, daemon=True).start()
+            threading.Thread(target=self.callback,
+                             kwargs=kwargs, daemon=True).start()
         except Exception as e:
             logger.error(
                 "Error while processing callback for {}: {}".format(
@@ -114,7 +116,8 @@ class RecordStore(object):
 
     def _get_cache_path(self, attribute):
         return str(
-            Path(CACHE_DIR).joinpath("{}{}.json".format(self._cache_key, attribute))
+            Path(CACHE_DIR).joinpath(
+                "{}{}.json".format(self._cache_key, attribute))
         )
 
     def _load_cache(self, attributes=("_values", "_role", "_collection_row_ids")):
@@ -193,7 +196,8 @@ class RecordStore(object):
 
         with self._mutex:
             if role:
-                logger.debug("Updating 'role' for {}/{} to {}".format(table, id, role))
+                logger.debug(
+                    "Updating 'role' for {}/{} to {}".format(table, id, role))
                 self._role[table][id] = role
                 self._save_cache("_role")
             if value:
@@ -205,15 +209,18 @@ class RecordStore(object):
                     diff(
                         old_val,
                         value,
-                        ignore=["version", "last_edited_time", "last_edited_by"],
+                        ignore=["version", "last_edited_time",
+                                "last_edited_by"],
                         expand=True,
                     )
                 )
                 self._values[table][id] = value
                 self._save_cache("_values")
                 if old_val and difference:
-                    logger.debug("Value changed! Difference: {}".format(difference))
-                    callback_queue.append((table, id, difference, old_val, value))
+                    logger.debug(
+                        "Value changed! Difference: {}".format(difference))
+                    callback_queue.append(
+                        (table, id, difference, old_val, value))
 
         # run callbacks outside the mutex to avoid lockups
         for cb in callback_queue:
@@ -243,7 +250,8 @@ class RecordStore(object):
                 )
                 continue
 
-            requestlist += [{"table": table, "id": extract_id(id)} for id in ids]
+            requestlist += [{"table": table,
+                             "id": extract_id(id)} for id in ids]
 
         if requestlist:
             logger.debug(
@@ -277,13 +285,14 @@ class RecordStore(object):
 
         data = {
             "pageId": page_id,
-            "limit": 100000,
+            "limit": 100,
             "cursor": {"stack": []},
             "chunkNumber": 0,
             "verticalColumns": False,
         }
 
-        recordmap = self._client.post("loadPageChunk", data).json()["recordMap"]
+        recordmap = self._client.post(
+            "loadPageChunk", data).json()["recordMap"]
 
         self.store_recordmap(recordmap)
 
@@ -310,7 +319,8 @@ class RecordStore(object):
         group_by="",
     ):
 
-        assert not (aggregate and aggregations), "Use only one of `aggregate` or `aggregations` (old vs new format)"
+        assert not (
+            aggregate and aggregations), "Use only one of `aggregate` or `aggregations` (old vs new format)"
 
         # convert singletons into lists if needed
         if isinstance(aggregate, dict):
@@ -322,7 +332,7 @@ class RecordStore(object):
             "collectionId": collection_id,
             "collectionViewId": collection_view_id,
             "loader": {
-                "limit": 10000,
+                "limit": 100,
                 "loadContentCover": True,
                 "searchQuery": search,
                 "userLocale": "en",
