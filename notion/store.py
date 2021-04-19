@@ -332,7 +332,7 @@ class RecordStore(object):
             "collectionId": collection_id,
             "collectionViewId": collection_view_id,
             "loader": {
-                "limit": 100,
+                "limit": 1000000,
                 "loadContentCover": True,
                 "searchQuery": search,
                 "userLocale": "en",
