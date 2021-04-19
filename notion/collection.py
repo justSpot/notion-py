@@ -31,7 +31,8 @@ class NotionDate(object):
             data = obj[0][1][0][1]
         else:
             return None
-        start = cls._parse_datetime(data.get("start_date"), data.get("start_time"))
+        start = cls._parse_datetime(
+            data.get("start_date"), data.get("start_time"))
         end = cls._parse_datetime(data.get("end_date"), data.get("end_time"))
         timezone = data.get("timezone")
         return cls(start, end=end, timezone=timezone)
@@ -276,13 +277,15 @@ def _normalize_query_data(data, collection, recursing=False):
     elif isinstance(data, dict):
         # convert slugs to property ids
         if "property" in data:
-            data["property"] = _normalize_property_name(data["property"], collection)
+            data["property"] = _normalize_property_name(
+                data["property"], collection)
         # convert any instantiated objects into their ids
         if "value" in data:
             if hasattr(data["value"], "id"):
                 data["value"] = data["value"].id
         for key in data:
-            data[key] = _normalize_query_data(data[key], collection, recursing=True)
+            data[key] = _normalize_query_data(
+                data[key], collection, recursing=True)
     return data
 
 
@@ -300,7 +303,8 @@ class CollectionQuery(object):
         calendar_by="",
         group_by="",
     ):
-        assert not (aggregate and aggregations), "Use only one of `aggregate` or `aggregations` (old vs new format)"
+        assert not (
+            aggregate and aggregations), "Use only one of `aggregate` or `aggregations` (old vs new format)"
         self.collection = collection
         self.collection_view = collection_view
         self.search = search
@@ -428,17 +432,21 @@ class CollectionRowBlock(PageBlock):
         if prop["type"] in ["number"]:
             if val is not None:
                 val = val[0][0]
-                if "." in val:
-                    val = float(val)
-                else:
-                    val = int(val)
+                try:
+                    if "." in val:
+                        val = float(val)
+                    else:
+                        val = int(val)
+                except ValueError:
+                    value = None
         if prop["type"] in ["select"]:
             val = val[0][0] if val else None
         if prop["type"] in ["multi_select"]:
             val = [v.strip() for v in val[0][0].split(",")] if val else []
         if prop["type"] in ["person"]:
             val = (
-                [self._client.get_user(item[1][0][1]) for item in val if item[0] == "‣"]
+                [self._client.get_user(item[1][0][1])
+                 for item in val if item[0] == "‣"]
                 if val
                 else []
             )
@@ -449,7 +457,8 @@ class CollectionRowBlock(PageBlock):
         if prop["type"] in ["file"]:
             val = (
                 [
-                    add_signed_prefix_as_needed(item[1][0][1], client=self._client, id=self.id)
+                    add_signed_prefix_as_needed(
+                        item[1][0][1], client=self._client, id=self.id)
                     for item in val
                     if item[0] != ","
                 ]
@@ -492,7 +501,8 @@ class CollectionRowBlock(PageBlock):
                 "Object does not have property '{}'".format(identifier)
             )
 
-        path, val = self._convert_python_to_notion(val, prop, identifier=identifier)
+        path, val = self._convert_python_to_notion(
+            val, prop, identifier=identifier)
 
         self.set(path, val)
 
@@ -503,7 +513,8 @@ class CollectionRowBlock(PageBlock):
                 val = ""
             if not isinstance(val, str):
                 raise TypeError(
-                    "Value passed to property '{}' must be a string.".format(identifier)
+                    "Value passed to property '{}' must be a string.".format(
+                        identifier)
                 )
             val = markdown_to_notion(val)
         if prop["type"] in ["number"]:
@@ -571,7 +582,8 @@ class CollectionRowBlock(PageBlock):
         if prop["type"] in ["checkbox"]:
             if not isinstance(val, bool):
                 raise TypeError(
-                    "Value passed to property '{}' must be a bool.".format(identifier)
+                    "Value passed to property '{}' must be a bool.".format(
+                        identifier)
                 )
             val = [["Yes" if val else "No"]]
         if prop["type"] in ["relation"]:
@@ -634,7 +646,8 @@ class QueryResult(object):
         self._client = collection._client
         self._block_ids = self._get_block_ids(result)
         self.aggregates = result.get("aggregationResults", [])
-        self.aggregate_ids = [agg.get("id") for agg in (query.aggregate or query.aggregations)]
+        self.aggregate_ids = [agg.get("id") for agg in (
+            query.aggregate or query.aggregations)]
         self.query = query
 
     def _get_block_ids(self, result):
