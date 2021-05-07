@@ -2,6 +2,7 @@ import hashlib
 import json
 import re
 import uuid
+import time
 
 from requests import Session, HTTPError
 from requests.cookies import cookiejar_from_dict
@@ -35,7 +36,7 @@ def create_session():
     retry = Retry(
         5,
         backoff_factor=0.3,
-        status_forcelist=(502, 503, 504),
+        status_forcelist=(502, 503, 504, 429),
         # CAUTION: adding 'POST' to this list which is not technically idempotent
         method_whitelist=("POST", "HEAD", "TRACE", "GET",
                           "PUT", "OPTIONS", "DELETE"),
